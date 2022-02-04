@@ -12,36 +12,48 @@ const Modal = {
     }
 }
 
-const transactions = [
-    {
-        id: 1,
-        description: 'luz',
-        amount: -50000,
-        date: '23/01/2022'
+
+
+
+const Transaction = {
+    all: [
+        {
+            description: 'luz',
+            amount: -50000,
+            date: '23/01/2022'
+        },
+    
+        {
+            description: 'Freela',
+            amount: 70000,
+            date: '23/01/2022'
+        },
+    
+        {
+            description: 'Cartao de Credito',
+            amount: -30000,
+            date: '23/01/2022'
+        },
+    ],
+
+    add(transaction){
+        Transaction.all.push(transaction)
+
+        App.reload()
+        
     },
 
-    {
-        id: 2,
-        description: 'Freela',
-        amount: 70000,
-        date: '23/01/2022'
+    remove(index){
+        Transaction.all.splice(index, 1)
+
+        App.reload()
     },
 
-    {
-        id: 3,
-        description: 'Cartao de Credito',
-        amount: -30000,
-        date: '23/01/2022'
-    },
-]
-
-
-const transaction = {
     incomes(){
 
         let income = 0
 
-        transactions.forEach(transaction => {
+        Transaction.all.forEach(transaction => {
             if(transaction.amount > 0){
                 income += transaction.amount
             }
@@ -53,7 +65,7 @@ const transaction = {
     expenses(){
         let expense = 0
 
-        transactions.forEach(transaction => {
+        Transaction.all.forEach(transaction => {
             if(transaction.amount < 0){
                 expense += transaction.amount
             }
@@ -63,7 +75,7 @@ const transaction = {
 
     },
     total(){
-        return transaction.incomes() + transaction.expenses()
+        return Transaction.incomes() + Transaction.expenses()
 
     }
 }
@@ -96,11 +108,13 @@ const DOM = {
     },
 
     updateBalance(){
-        document.getElementById('incomeDisplay').innerHTML = Utils.formatCurrency(transaction.incomes())
-        document.getElementById('expenseDisplay').innerHTML = Utils.formatCurrency(transaction.expenses())
-        document.getElementById('totalDisplay').innerHTML = Utils.formatCurrency(transaction.total())
+        document.getElementById('incomeDisplay').innerHTML = Utils.formatCurrency(Transaction.incomes())
+        document.getElementById('expenseDisplay').innerHTML = Utils.formatCurrency(Transaction.expenses())
+        document.getElementById('totalDisplay').innerHTML = Utils.formatCurrency(Transaction.total())
+    },
 
-
+    clearTransactions(){
+        DOM.transactionsContainer.innerHTML  = ""
     }
 }
 
@@ -121,9 +135,60 @@ const Utils = {
     }
 }
 
+const Form = {
+    description: document.querySelector('input#description'),
+    amount: document.querySelector('input#amount'),
+    date: document.querySelector('input#date'),
 
-transactions.forEach(function(transaction){
-    DOM.addtransaction(transaction)
-})
+    getValues(){
+        return {
+            description: Form.description.value,
+            amount: Form.amount.value,
+            date: Form.date.value,
+        }
+    },
 
-DOM.updateBalance()
+
+    formatData(){
+
+    },
+
+    validateFilds(){
+        const { description, amount, date} = Form.getValues()
+
+        if(description.trim() === "" || amount.trim() === "" || date.trim() === ""){
+            throw new Error("Por favor preencha todos os campos!")
+        }
+    },
+
+    submit(event){
+        event.preventDefault()
+
+        try {
+            Form.validateFilds()
+
+        } catch (error){
+            alert(error.message)
+        }
+        Form.formatData()
+    }
+}
+
+const App = {
+    init(){
+
+        Transaction.all.forEach(transaction => {
+            DOM.addtransaction(transaction)
+        })
+        
+        DOM.updateBalance()
+        
+    },
+
+    reload(){
+        DOM.clearTransactions()
+        App.init()
+    },
+}
+
+App.init()
