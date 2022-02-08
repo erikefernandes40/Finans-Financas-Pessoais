@@ -12,9 +12,6 @@ const Modal = {
     }
 }
 
-
-
-
 const Transaction = {
     all: [
         {
@@ -85,12 +82,13 @@ const DOM = {
 
     addtransaction(transaction, index){
         const tr = document.createElement('tr')
-        tr.innerHTML = DOM.innerHTMLTransaction(transaction)
+        tr.innerHTML = DOM.innerHTMLTransaction(transaction, index)
+        tr.dataset.index = index
 
         DOM.transactionsContainer.appendChild(tr)
     },
 
-    innerHTMLTransaction(transaction){
+    innerHTMLTransaction(transaction, index){
 
         const CSSclass = transaction.amount > 0 ? "income" : "expense"
 
@@ -101,7 +99,7 @@ const DOM = {
         <td class="${CSSclass}">${amount}</td>
         <td class="date">${transaction.date}</td>
         <td>
-            <img src="./assets/minus.svg" alt="remover transação">
+            <img onclick="Transaction.remove(${index})" src="./assets/minus.svg" alt="remover transação">
         </td>`
 
         return html
@@ -119,6 +117,17 @@ const DOM = {
 }
 
 const Utils = {
+    formatAmount(value){
+        value = Number(value.replace(/\,\./g, "")) * 100
+
+        return value
+    },
+
+    formatDate(date){
+        const splittedDate = date.split("-")
+        return `${splittedDate[2]}/${splittedDate[1]}/${splittedDate[0]}`
+    },
+
     formatCurrency(value){
         const signal = Number(value) < 0 ? "-" : ""
 
@@ -154,11 +163,35 @@ const Form = {
     },
 
     validateFilds(){
-        const { description, amount, date} = Form.getValues()
+        const { description, amount, date } = Form.getValues()
 
         if(description.trim() === "" || amount.trim() === "" || date.trim() === ""){
             throw new Error("Por favor preencha todos os campos!")
         }
+    },
+
+    formatValues(){
+        let { description, amount, date } = Form.getValues()
+
+        amount = Utils.formatAmount(amount)
+        date = Utils.formatDate(date)
+
+        return {
+            description,
+            amount,
+            date
+        }
+    },
+
+    saveTransaction(transaction){
+
+    },
+
+    clearFilds(){
+        Form.description.value = ""
+        Form.amount.value = ""
+        Form.date.value = ""
+
     },
 
     submit(event){
@@ -166,6 +199,10 @@ const Form = {
 
         try {
             Form.validateFilds()
+           const transaction =  Form.formatValues()
+           Transaction.add(transaction)
+           Form.clearFilds()
+           Modal.close()
 
         } catch (error){
             alert(error.message)
@@ -177,9 +214,8 @@ const Form = {
 const App = {
     init(){
 
-        Transaction.all.forEach(transaction => {
-            DOM.addtransaction(transaction)
-        })
+        Transaction.all.forEach(DOM.addtransaction)
+
         
         DOM.updateBalance()
         
